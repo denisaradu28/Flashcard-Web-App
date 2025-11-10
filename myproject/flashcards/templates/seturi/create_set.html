@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Flashcard Set</title>
+    <link href="https://cdn.jsdeliver.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">Create a Flashcard Set</h2>
+
+    <form id="flashcard-form" method="POST">
+        {% csrf_token %}
+
+        <!--Set Name -->
+        <div class="mb-3">
+            <label for="setName" class="form-label">Set Name</label>
+            <input type="text" class="form-control" id="setName" name="name" required>
+            <div class="invalid-feedback">Please enter a set name.</div>
+        </div>
+
+        <!-- Cards container -->
+        <div id="cards-container">
+            <div class="card-item mb-3">
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control question" placeholder="Question" required>
+                        <div class="invalid-feedback">Please enter a question.</div>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="text" class="form-control answer" placeholder="Answer" required>
+                        <div class="invalid-feedback">Please enter an answer.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Add new card button-->
+        <div class="mb-3">
+            <button type="button" id="add-card" class="btn btn-secondary">Add Card</button>
+        </div>
+
+        <!--Submit-->
+        <button type="submit" class="btn btn-primary">Create Set</button>
+    </form>
+</div>
+</body>
+</html>
