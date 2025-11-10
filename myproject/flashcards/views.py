@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from pyexpat.errors import messages
+from django.contrib import messages
 
 # Create your views here.
-from .models import FlashcardSet
+from .models import FlashcardSet, Flashcard
 from django import forms
 
 class FlashcardSetForm(forms.ModelForm):
@@ -28,7 +28,15 @@ def create_set(request):
     if request.method == 'POST':
         form = FlashcardSetForm(request.POST)
         if form.is_valid():
-            form.save()
+            new_set = form.save()
+
+            questions = request.POST.getlist('question')
+            answers = request.POST.getlist('answer')
+
+            for q, a in zip(questions, answers):
+                if q.strip() and a.strip():
+                    FlashcardSet.objects.create(set=new_set, question=q, answer=a)
+
             return redirect('read_sets')
     else:
         form = FlashcardSetForm()
