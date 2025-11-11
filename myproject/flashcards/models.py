@@ -10,7 +10,7 @@ class FlashcardSet(models.Model):
         return self.name
 
 class Flashcard(models.Model):
-    set = models.ForeignKey(FlashcardSet, on_delete=models.CASCADE, related_name='cards', null = True)
+    set = models.ForeignKey(FlashcardSet, on_delete=models.CASCADE, related_name='cards')
     question = models.CharField(max_length=255)
     answer = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)

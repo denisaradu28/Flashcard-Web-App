@@ -3,46 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <title>Create Flashcard Set</title>
-    <link href="https://cdn.jsdeliver.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<div class="container-fluid mt-4">
-    <h2 class="mb-4">Create a Flashcard Set</h2>
+<body class="bg-light">
+<div class="container-fluid mt-5">
+    <div class="card shadow p-4">
+        <h2 class="mb-4">Create a Flashcard Set</h2>
 
-    <form id="flashcard-form" method="POST">
-        {% csrf_token %}
+        <form id="flashcard-form" method="POST">
+            {% csrf_token %}
 
-        <!--Set Name -->
-        <div class="mb-3">
-            <label for="setName" class="form-label">Set Name</label>
-            <input type="text" class="form-control" id="setName" name="name" required>
-            <div class="invalid-feedback">Please enter a set name.</div>
-        </div>
+            <!--Set Name -->
+            <div class="mb-3">
+                <label for="setName" class="form-label">Set Name</label>
+                <input type="text" class="form-control" id="setName" name="name" required>
+                <div class="invalid-feedback">Please enter a set name.</div>
+            </div>
 
-        <!-- Cards container -->
-        <div id="cards-container">
+            <!-- Cards container -->
+            <div id="cards-container">
+                <div class="card-item mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control question" placeholder="Question" required>
+                            <div class="invalid-feedback">Please enter a question.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control answer" placeholder="Answer" required>
+                            <div class="invalid-feedback">Please enter an answer.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--Add new card button-->
+            <div class="mb-3">
+                <button type="button" id="add-card" class="btn btn-secondary">Add Card</button>
+            </div>
+
+            <!--Submit-->
+            <button type="submit" class="btn btn-primary">Create Set</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById("add-card").addEventListener("click", function () {
+        const container = document.getElementById("cards-container");
+        const cardHTML =`
             <div class="card-item mb-3">
                 <div class="row g-2">
-                    <div class="col-md-5">
+                    <div class="col md-6">
                         <input type="text" class="form-control question" placeholder="Question" required>
                         <div class="invalid-feedback">Please enter a question.</div>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col md-6">
                         <input type="text" class="form-control answer" placeholder="Answer" required>
                         <div class="invalid-feedback">Please enter an answer.</div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div>`;
+    container.insertAdjacentHTML("beforeend", cardHTML);
+    });
 
-        <!--Add new card button-->
-        <div class="mb-3">
-            <button type="button" id="add-card" class="btn btn-secondary">Add Card</button>
-        </div>
+    document.getElementById("flashcard-form").addEventListener("submit", function (event) {
+        let isValid = true;
+        const nameInput = document.getElementById("setName");
+        const question = document.querySelectorAll(".question");
+        const answer = document.querySelectorAll(".answer");
 
-        <!--Submit-->
-        <button type="submit" class="btn btn-primary">Create Set</button>
-    </form>
-</div>
+        if(nameInput.value.trim() === ""){
+            nameInput.classList.add("is-invalid");
+            isValid = false;
+        } else {
+            nameInput.classList.remove("is-invalid");
+            nameInput.classList.add("is-valid");
+        }
+
+        question.forEach(q => {
+            if(q.value.trim() === ""){
+                q.classList.add("is-invalid");
+                isValid = false;
+            } else {
+                q.classList.remove("is-invalid");
+                q.classList.add("is-valid");
+            }
+        });
+
+        answer.forEach(a => {
+            if(a.value.trim() === ""){
+                a.classList.add("is-invalid");
+                isValid = false;
+            } else {
+                a.classList.remove("is-invalid");
+                a.classList.add("is-valid");
+            }
+        });
+
+        if(!isValid){
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    });
+</script>
 </body>
 </html>
