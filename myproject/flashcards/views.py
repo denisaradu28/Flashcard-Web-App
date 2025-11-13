@@ -49,32 +49,37 @@ def read_sets(request):
     return render(request, 'seturi/read_sets.html', {'sets': sets})
 
 
-def edit_set(request, set_id):
-    set_obj = get_object_or_404(FlashcardSet, id=set_id)
+def edit_set(request):
+    sets = FlashcardSet.objects.all()
+
     if request.method == 'POST':
-        form = FlashcardSetForm(request.POST, instance=set_obj)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "The set was successfully updated!")
-            return redirect('read_sets')
+        set_name = request.POST.get('set_name')
+        new_name = request.POST.get('new_name')
+
+        set_obj = FlashcardSet.objects.filter(name=set_name).first()
+        if not set_obj:
+            messages.error(request, 'Set not found')
+            return redirect('create_set')
+
+        if not new_name.strip():
+            messages.error(request, 'New set name cannot be empty')
+        elif FlashcardSet.objects.filter(name__iexact=new_name).exclude(pk=set_obj.pk).exists():
+            messages.error(request, 'Set name already exists')
         else:
-            messages.error(request, "Error: please check the entered fields.")
-    else:
-        form = FlashcardSetForm(instance=set_obj)
-    return render(request, 'seturi/edit_set.html', {'form': form, 'set': set_obj})
+            set_obj.name = new_name
+            set_obj.save()
+            messages.success(request, f'Set \"{set_obj.name}\" was updated successfully')
+            return redirect('read_sets')
+
+    return render(request, 'seturi/edit_set.html', {'sets': sets})
 
 
 def delete_set(request):
     if request.method == 'POST':
-        set_id = request.POST.get('set_id')
-        if not set_id:
-            messages.error(request, "Error: invalid set ID.")
-            return redirect('read_sets')
-
-        set_obj = get_object_or_404(FlashcardSet, id=set_id)
+        set_name = request.POST.get('set_name')
+        set_obj = get_object_or_404(FlashcardSet, name=set_name)
         set_obj.delete()
-        messages.success(request, f"The set '{set_obj.name}' was deleted successfully!")
+        messages.success(request, f'Set {set_name} was deleted successfully.')
         return redirect('read_sets')
-
-    messages.error(request, "Invalid request.")
-    return redirect('read_sets')
+    sets = FlashcardSet.objects.all()
+    return render(request, 'seturi/delete_set.html', {'sets': sets})
