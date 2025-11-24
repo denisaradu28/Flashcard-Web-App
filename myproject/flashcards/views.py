@@ -196,3 +196,94 @@ def view_set(request):
     cards = Flashcard.objects.filter(set=set_obj)
 
     return render(request, 'seturi/view_set.html', {"set": set_obj, "cards": cards})
+
+def start_quiz(request):
+    set_name = request.GET.get("set_name")
+
+    if not set_name:
+        return redirect("home")
+
+    flashcard_set = get_object_or_404(FlashcardSet, name=set_name)
+
+    card_ids = list(flashcard_set.cards.values_list("id", flat=True))
+
+    if not card_ids:
+        return render(request, "quiz/no_cards.html",{"set": flashcard_set})
+
+    request.session["quiz_state"] ={
+        "set_id": flashcard_set.id,
+        "card_ids": card_ids,
+        "current_index": 0,
+        "finished": False,
+    }
+
+    return redirect("take_quiz")
+
+def take_quiz(request):
+    quiz = request.session.get("quiz_state")
+
+    if not quiz or quiz.get("finished"):
+        return redirect("home")
+
+    card_ids = quiz["card_ids"]
+    current_index = quiz["current_index"]
+
+    if current_index >= len(card_ids):
+        return redirect("quiz_finished")
+
+    card_id = card_ids[current_index]
+    card = get_object_or_404(Flashcard, id=card_id)
+
+    status = None
+
+    if request.method == "POST":
+        user_answer = request.POST.get("answer","").strip()
+        correct_answer = (card.answer or "").strip()
+
+        if user_answer.lower() == correct_answer.lower():
+            status = "correct"
+        else:
+            status = "incorrect"
+
+    context = {
+        "set_id": quiz["set_id"],
+        "card": card,
+        "current_index": current_index,
+        "total_cards": len(card_ids),
+        "status": status,
+    }
+
+    return render(request, "quiz/take_quiz.html", context)
+
+def quiz_skip(request):
+    quiz = request.session.get("quiz_state")
+
+    if not quiz or quiz.get("finished"):
+        return redirect("home")
+
+    quiz["current_index"] += 1
+
+    if quiz["current_index"] >= len(quiz["card_ids"]):
+        quiz["finished"] = True
+        request.session["quiz_state"] = quiz
+        return redirect("quiz_finished")
+
+    request.session["quiz_state"] = quiz
+    return redirect("take_quiz")
+
+def quiz_stop(request):
+    quiz = request.session.get("quiz_state")
+
+    if quiz:
+        quiz["finished"] = True
+        request.session["quiz_state"] = quiz
+
+    return redirect("quiz_finished")
+
+def quiz_finished(request):
+    quiz = request.session.get("quiz_state")
+
+    if "quiz_state" in request.session:
+        del request.session["quiz_state"]
+
+    return render(request, "quiz/quiz_finished.html", {"quiz": quiz})
