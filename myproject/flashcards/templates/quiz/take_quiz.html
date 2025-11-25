@@ -2,145 +2,170 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Quiz</title>
+    <title>Take Quiz</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
         body {
-            background-color: #c7eec1;
-            padding: 40px;
+            background-color: #f3ebd3;
             font-family: Arial, sans-serif;
+            padding: 40px;
+        }
+
+        .flashcard-container {
+            width: 75%;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .flip-card {
+            background-color: transparent;
+            width: 100%;
+            height: 320px;
+            perspective: 1000px;
+            margin-bottom: 40px;
+        }
+
+        .flip-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.7s ease-in-out;
+            transform-style: preserve-3d;
+        }
+
+        .flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flash-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            border: 3px solid #0a3d1e;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: 600;
+            padding: 20px;
+        }
+
+        .front {
+            background-color: white;
+            color: #0c381f;
+        }
+
+        .back {
+            background-color: white;
+            transform: rotateY(180deg);
+        }
+
+        .correct {
+            background-color: #d6f5d6 !important;
+            border-color: #2c7a2c !important;
+        }
+        .incorrect {
+            background-color: #ffd6d6 !important;
+            border-color: #a62626 !important;
+        }
+
+        .btn-green {
+            background-color: #0f5f34;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+        }
+        .btn-green:hover {
+            background-color: #0c4d2b;
+            transform: scale(1.05);
         }
 
         .home-btn {
             background-color: #0f5f34;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 25px;
             border-radius: 10px;
+            font-size: 20px;
             font-weight: 600;
             text-decoration: none;
-            transition: 0.25s ease;
         }
-
         .home-btn:hover {
             background-color: #0c4d2b;
             transform: scale(1.05);
         }
-
-        .card-wrapper {
-            width: 500px;
-            height: 250px;
-            margin: 40px auto;
-            perspective: 1200px;
-        }
-
-        .flashcard {
-            width: 100%;
-            height: 100%;
-            background: white;
-            border-radius: 15px;
-            border: 3px solid #0f5f34;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            position: relative;
-            transition: transform 0.8s;
-            transform-style: preserve-3d;
-        }
-
-        .flashcard.flip {
-            transform: rotateY(180deg);
-        }
-
-        .front, .back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            font-size: 26px;
-            font-weight: bold;
-            color: #0f3d20;
-        }
-
-        .back {
-            transform: rotateY(180deg);
-        }
-
-        .quiz-btn {
-            background-color: #0f5f34;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            border: none;
-            transition: 0.25s ease;
-        }
-
-        .quiz-btn:hover {
-            background-color: #0c4d2b;
-            transform: scale(1.05);
-        }
-
-        .answer-box {
-            width: 500px;
-            margin: auto;
-        }
     </style>
-
-    <script>
-        function flipCard() {
-            document.getElementById("flashcard").classList.toggle("flip");
-        }
-    </script>
-
 </head>
+
 <body>
 
-<div class="quiz-box">
+<a href="{% url 'home' %}" class="home-btn mb-4 d-inline-block">Home</a>
 
-    <div class="d-flex justify-content-between mb-3">
-        <a href="{% url 'home' %}" class="btn-small">Home</a>
+<div class="flashcard-container">
+
+    <div class="flip-card">
+        <div id="flip-inner"
+             class="flip-inner
+             {% if status == 'correct' %}correct{% elif status == 'incorrect' %}incorrect{% endif %}">
+
+            <div class="flash-side front">
+                {{ card.question }}
+            </div>
+
+            <div class="flash-side back">
+                {{ card.answer }}
+            </div>
+
+        </div>
     </div>
 
-    <div class="quiz-card
-         {% if status == 'correct' %}correct{% elif status == 'inccorect' %}incorrect{% endif %}">
+    <div class="d-flex justify-content-center gap-3 mb-4">
 
-    <p class="question-text">
-        {{ card.question }}
-    </p>
-
-    <div id="answer-box" class="answer-text" style="display: none;">
-        <strong>Answer:</strong> {{ card.answer }}
-    </div>
-
-    <div class="mt-3 d-flex flex-wrap gap-2">
-
-        <button type="button" class="btn-small"
-                onlcick="document.getElementById('answer-box').style.display='block';">Flip Card</button>
-
-        <form action="{% url 'quiz_skip' %}" method="post" class="d-inline">
+        <form action="{% url 'quiz_stop' %}" method="post">
             {% csrf_token %}
-            <button type="submit" class="btn-small">Skip</button>
+            <button type="submit" class="btn-green">Stop</button>
         </form>
 
-        <form action="{% url 'quiz_stop' %}" method="post" class="d-inline">
+        <form action="{% url 'quiz_skip' %}" method="post">
             {% csrf_token %}
-            <button type="submit" class="btn-small">Stop</button>
+            <button type="submit" class="btn-green">Skip</button>
         </form>
+
+        <button type="button" id="flipBtn" class="btn-green">Flip Card</button>
+
     </div>
 
-    <form method="post" class="mt-4">
+    <form id="answerForm" method="post">
         {% csrf_token %}
         <input type="hidden" name="card_id" value="{{ card.id }}">
 
         <label class="form-label fw-semibold">Your answer</label>
-        <input type="text" name="answer" class="form-control" placeholder="Type your answer..." required>
-
-        <button type="submit" class="btn-green mt-3">Submit Answer</button>
+        <input id="answerInput" name="answer" type="text" class="form-control form-control-lg"
+               placeholder="Type your answer..." required>
     </form>
-    </div>
+
 </div>
+
+<script>
+    const flipBtn = document.getElementById("flipBtn");
+    const answerForm = document.getElementById("answerForm");
+    const flipInner = document.getElementById("flip-inner");
+
+    flipBtn.addEventListener("click", () => {
+
+        flipInner.classList.add("flipped");
+
+        setTimeout(() => {
+            answerForm.submit();
+        }, 750);
+    });
+</script>
+
 </body>
 </html>

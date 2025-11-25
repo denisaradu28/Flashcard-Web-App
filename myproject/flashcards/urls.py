@@ -19,7 +19,7 @@ urlpatterns = [
 
     path("quiz/take/", views.take_quiz, name='take_quiz'),
     path("quiz/skip/", views.quiz_skip, name='quiz_skip'),
-    path("quiz/finish/", views.quiz_finished, name='quiz_finish'),
+    path("quiz/finish/", views.quiz_finished, name='quiz_finished'),
     path("quiz/stop/", views.quiz_stop, name='quiz_stop'),
     path("quiz/start/", views.start_quiz, name='quiz_start'),
     path('predefined/<str:set_key>/', views.predefined_set, name='predefined_set'),

@@ -238,12 +238,16 @@ def take_quiz(request):
 
     if request.method == "POST":
         user_answer = request.POST.get("answer","").strip()
-        correct_answer = (card.answer or "").strip()
 
-        if user_answer.lower() == correct_answer.lower():
-            status = "correct"
+        if user_answer != "":
+            correct_answer = (card.answer or "").strip()
+
+            if user_answer.lower() == correct_answer.lower():
+                status = "correct"
+            else:
+                status = "incorrect"
         else:
-            status = "incorrect"
+            status = None
 
     context = {
         "set_id": quiz["set_id"],
