@@ -86,7 +86,7 @@
 
     <div class="buttons-center">
         <a href="{% url 'edit_set' %}?set_name={{ set.name }}" class="edit-btn">Edit Set</a>
-
+        <a href="{% url 'quiz_start' %}?set_name={{ set.name }}" class="del-btn">Take Quiz</a>
         <form action="{% url 'delete_set' %}" method="post" style="display:inline;">
             {% csrf_token %}
             <input type="hidden" name="set_name" value="{{ set.name }}">
