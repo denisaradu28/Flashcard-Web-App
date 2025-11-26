@@ -70,7 +70,8 @@
             border-color: #a62626 !important;
         }
 
-        .btn-green, .home-btn {
+        .btn-green,
+        .home-btn {
             background-color: #0f5f34;
             color: white;
             padding: 12px 25px;
@@ -82,26 +83,36 @@
             transition: 0.2s ease-in-out;
         }
 
-        .btn-green:hover, .home-btn:hover {
+        .btn-green:hover,
+        .home-btn:hover {
             background-color: #0c4d2b;
             transform: scale(1.05);
+        }
+
+        .back-container {
+            width: 55%;
+            max-width: 900px;
+            margin: auto;
+            margin-bottom: 20px;
         }
 
         .is-invalid {
             border: 2px solid red !important;
         }
-
     </style>
 </head>
 
 <body>
 
-<a href="{% url 'home' %}" class="home-btn mb-4 d-inline-block">Home</a>
+<div class="back-container">
+    <a href="{% url 'predefined_list' %}" class="home-btn">Back</a>
+</div>
 
 <div class="flashcard-container">
 
     <div class="flip-card">
-        <div id="flip-inner" class="flip-inner {% if status %}flipped{% endif %}">
+        <div id="flip-inner"
+             class="flip-inner {% if status %}flipped{% endif %}">
 
             <div class="flash-side front">
                 {{ card.question }}
@@ -117,18 +128,18 @@
 
     <div class="d-flex justify-content-center gap-3 mb-4">
 
-        <form action="{% url 'quiz_stop' %}" method="post">
+        <form action="{% url 'pre_quiz_stop' %}" method="post">
             {% csrf_token %}
             <button type="submit" class="btn-green">Stop</button>
         </form>
 
         {% if status %}
-            <form action="{% url 'quiz_skip' %}" method="post">
+            <form action="{% url 'pre_quiz_skip' %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn-green">Next</button>
             </form>
         {% else %}
-            <form action="{% url 'quiz_skip' %}" method="post">
+            <form action="{% url 'pre_quiz_skip' %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn-green">Skip</button>
             </form>
@@ -143,12 +154,14 @@
     {% if not status %}
     <form id="answerForm" method="post" autocomplete="off">
         {% csrf_token %}
-        <input type="hidden" name="card_id" value="{{ card.id }}">
-
         <label class="form-label fw-semibold">Your answer</label>
-        <input id="answerInput" name="answer" type="text"
+
+        <input id="answerInput"
+               name="answer"
+               type="text"
                class="form-control form-control-lg"
-               placeholder="Type your answer..." required>
+               placeholder="Type your answer..."
+               required>
     </form>
     {% endif %}
 
@@ -156,14 +169,13 @@
 
 <script>
     const flipBtn = document.getElementById("flipBtn");
-    const answerForm = document.getElementById("answerForm");
     const flipInner = document.getElementById("flip-inner");
+    const answerForm = document.getElementById("answerForm");
 
     if (flipBtn) {
         flipBtn.addEventListener("click", () => {
 
             const input = document.getElementById("answerInput");
-
             if (!input.value.trim()) {
                 input.focus();
                 input.classList.add("is-invalid");

@@ -23,5 +23,11 @@ urlpatterns = [
     path("quiz/stop/", views.quiz_stop, name='quiz_stop'),
     path("quiz/start/", views.start_quiz, name='quiz_start'),
     path('predefined/<str:set_key>/', views.predefined_set, name='predefined_set'),
+    path("predefined/<str:set_key>/quiz/start/", views.pre_quiz_start, name="pre_quiz_start"),
+    path("predefined/quiz/take/", views.pre_take_quiz, name="pre_take_quiz"),
+    path("predefined/quiz/skip/", views.pre_quiz_skip, name="pre_quiz_skip"),
+    path("predefined/quiz/stop/", views.pre_quiz_stop, name="pre_quiz_stop"),
+    path("predefined/quiz/finished/", views.pre_quiz_finished, name="pre_quiz_finished"),
+
 
 ]

@@ -1,7 +1,7 @@
+from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
-# Create your views here.
 from .models import FlashcardSet, Flashcard
 from django import forms
 
@@ -63,13 +63,11 @@ def predefined_list(request):
 
 def predefined_set(request, set_key):
     if set_key not in predefined_sets:
-        return render(request, "seturi/predefined_sets.html", {
-            "title": "Set not found",
-            "cards": []
-        })
+        raise Http404("Set not found")
 
     selected_set = predefined_sets[set_key]
-    return render(request, "seturi/predefined_sets.html",{
+    return render(request, "seturi/predefined_set.html",{
+        "key": set_key,
         "title": selected_set["title"],
         "cards": selected_set["cards"],
     })
@@ -196,6 +194,85 @@ def view_set(request):
     cards = Flashcard.objects.filter(set=set_obj)
 
     return render(request, 'seturi/view_set.html', {"set": set_obj, "cards": cards})
+
+def pre_quiz_start(request, set_key):
+    if set_key not in predefined_sets:
+        raise Http404("Set not found")
+
+    selected_set = predefined_sets[set_key]["cards"]
+
+    request.session["pre_quiz"] = {
+        "cards": selected_set,
+        "current": 0,
+        "finished": False,
+        "set_key": set_key
+    }
+
+    return redirect("pre_take_quiz")
+
+def pre_take_quiz(request):
+    quiz = request.session.get("pre_quiz")
+
+    if not quiz or quiz["finished"]:
+        return redirect("predefined_list")
+
+    index = quiz["current"]
+    cards = quiz["cards"]
+
+    if index >= len(cards):
+        return redirect("pre_quiz_finished")
+
+    card = cards[index]
+
+    status = None
+
+    if request.method == "POST":
+        user_answer = request.POST.get("answer", "").strip().lower()
+        correct_answer = card["answer"].strip().lower()
+
+        if user_answer == correct_answer:
+            status = "correct"
+        else:
+            status = "incorrect"
+
+    return render(request, "quiz/predefined_take_quiz.html", {
+        "card": card,
+        "status": status,
+        "index": index,
+        "total": len(cards)
+    })
+
+def pre_quiz_skip(request):
+    quiz = request.session.get("pre_quiz")
+
+    if not quiz:
+        return redirect("predefined_list")
+
+    quiz["current"] += 1
+    request.session["pre_quiz"] = quiz
+
+    if quiz["current"] >= len(quiz["cards"]):
+        return redirect("pre_quiz_finished")
+
+    return redirect("pre_take_quiz")
+
+def pre_quiz_stop(request):
+    quiz = request.session.get("pre_quiz")
+
+    if quiz:
+        quiz["finished"] = True
+        request.session["pre_quiz"] = quiz
+
+    return redirect("pre_quiz_finished")
+
+def pre_quiz_finished(request):
+    try:
+        del request.session["pre_quiz"]
+    except KeyError:
+        pass
+
+    return render(request, "quiz/quiz_finished.html")
+
 
 def start_quiz(request):
     set_name = request.GET.get("set_name")
