@@ -6,7 +6,7 @@ from django.contrib import messages
 
 from .models import FlashcardSet, Flashcard, FlashcardProgress
 from django import forms
-
+from .factories import UserFlashcardSetCreator, CardDTO
 predefined_sets = {
     "POO": {
         "title": "POO Basisc",
@@ -104,14 +104,25 @@ def create_set(request):
         if form.is_valid():
             new_set = form.save()
 
-            questions = request.POST.getlist('question')
-            answers = request.POST.getlist('answer')
+            name = form.cleaned_data['name']
+            question = request.POST.getlist("question")
+            answer = request.POST.getlist("answer")
 
-            for q, a in zip(questions, answers):
-                if q.strip() and a.strip():
-                    Flashcard.objects.create(set=new_set, question=q, answer=a)
+            cards = [CardDTO(q,a) for q, a in zip(question, answer)]
+
+            creator = UserFlashcardSetCreator(name=name, cards=cards)
+            #creator.create_set()
 
             return redirect('read_sets')
+
+            # questions = request.POST.getlist('question')
+            # answers = request.POST.getlist('answer')
+            #
+            # for q, a in zip(questions, answers):
+            #     if q.strip() and a.strip():
+            #         Flashcard.objects.create(set=new_set, question=q, answer=a)
+            #
+            # return redirect('read_sets')
     else:
         form = FlashcardSetForm()
 
