@@ -102,7 +102,7 @@ def create_set(request):
     if request.method == 'POST':
         form = FlashcardSetForm(request.POST)
         if form.is_valid():
-            new_set = form.save()
+           # new_set = form.save()
 
             name = form.cleaned_data['name']
             question = request.POST.getlist("question")
@@ -111,7 +111,7 @@ def create_set(request):
             cards = [CardDTO(q,a) for q, a in zip(question, answer)]
 
             creator = UserFlashcardSetCreator(name=name, cards=cards)
-            #creator.create_set()
+            creator.create_set()
 
             return redirect('read_sets')
 
