@@ -28,6 +28,6 @@ urlpatterns = [
     path("predefined/quiz/skip/", views.pre_quiz_skip, name="pre_quiz_skip"),
     path("predefined/quiz/stop/", views.pre_quiz_stop, name="pre_quiz_stop"),
     path("predefined/quiz/finished/", views.pre_quiz_finished, name="pre_quiz_finished"),
-
+    path("progress/", views.my_progress, name="my_progress"),
 
 ]
