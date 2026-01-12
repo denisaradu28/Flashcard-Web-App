@@ -167,6 +167,11 @@ def pre_quiz_start(request, set_key):
 
     return redirect("pre_take_quiz")
 
+def get_session_key(request):
+    if not request.session.session_key:
+        request.session.save()   # creează session în DB și generează cheia
+    return request.session.session_key
+
 
 def pre_take_quiz(request):
     quiz = request.session.get("pre_quiz")
@@ -186,7 +191,8 @@ def pre_take_quiz(request):
     if request.method == "POST":
         user_answer = request.POST.get("answer", "").strip()
         evaluator = QuizEvaluator(ExactMatchStrategy())
-        is_correct = evaluator.evaluate(user_answer, card["answer"])
+        correct_answer = (card.get("answer") or "").strip()
+        is_correct = evaluator.evaluate(correct_answer, user_answer)
         status = "correct" if is_correct else "incorrect"
 
         if is_correct:
@@ -220,7 +226,10 @@ def pre_quiz_finished(request):
         correct = quiz.get("correct_count", 0)
         percentage = round(correct / total * 100, 2) if total else 0
 
+        sk = get_session_key(request)
+
         FlashcardProgress.objects.update_or_create(
+            session_key=sk,
             predefined_key=set_key,
             defaults={
                 "completed": correct,
@@ -231,7 +240,7 @@ def pre_quiz_finished(request):
 
         del request.session["pre_quiz"]
 
-    return render(request, "quiz/quiz_finished.html")
+    return redirect("my_progress")
 
 def pre_quiz_stop(request):
     quiz = request.session.get("pre_quiz")
@@ -262,8 +271,11 @@ def start_quiz(request):
 def take_quiz(request):
     quiz = request.session.get("quiz_state")
 
-    if not quiz or quiz["finished"]:
+    if not quiz:
         return redirect("home")
+
+    if quiz.get("finished"):
+        return redirect("quiz_finished")
 
     card_id = quiz["card_ids"][quiz["current_index"]]
     card = get_object_or_404(Flashcard, id=card_id)
@@ -272,7 +284,8 @@ def take_quiz(request):
     if request.method == "POST":
         user_answer = request.POST.get("answer", "").strip()
         evaluator = QuizEvaluator(ExactMatchStrategy())
-        is_correct = evaluator.evaluate(user_answer, card.answer)
+        correct_answer = (card.answer or "").strip()
+        is_correct = evaluator.evaluate(correct_answer, user_answer)
 
         status = "correct" if is_correct else "incorrect"
         if is_correct:
@@ -294,10 +307,15 @@ def take_quiz(request):
 
 def quiz_skip(request):
     quiz = request.session.get("quiz_state")
+    if not quiz:
+        return redirect("home")
+
     quiz["current_index"] += 1
 
     if quiz["current_index"] >= len(quiz["card_ids"]):
         quiz["finished"] = True
+        request.session["quiz_state"] = quiz
+        return redirect("quiz_finished")
 
     request.session["quiz_state"] = quiz
     return redirect("take_quiz")
@@ -311,7 +329,11 @@ def quiz_finished(request):
         correct = quiz["correct_count"]
         percentage = round((correct / total) * 100, 2) if total else 0
 
+        flashcard_set = get_object_or_404(FlashcardSet, id=quiz["set_id"])
+        sk = get_session_key(request)
+
         FlashcardProgress.objects.update_or_create(
+            session_key=sk,
             set_id=quiz["set_id"],
             defaults={
                 "completed": correct,
@@ -322,7 +344,7 @@ def quiz_finished(request):
 
         del request.session["quiz_state"]
 
-    return render(request, "quiz/quiz_finished.html")
+    return redirect("my_progress")
 
 def quiz_stop(request):
     quiz = request.session.get("quiz_state")
@@ -334,5 +356,6 @@ def quiz_stop(request):
     return redirect("quiz_finished")
 
 def my_progress(request):
-    progress_list = FlashcardProgress.objects.all()
+    sk = get_session_key(request)
+    progress_list = FlashcardProgress.objects.filter(session_key=sk).select_related("set")
     return render(request, "progress/my_progress.html", {"progress_list": progress_list})
